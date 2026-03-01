@@ -29,7 +29,24 @@ void test_functional_01() {
 
     {
         UTimeCounter counter("test_functional_01");
-        status = pipeline->process(runTimes);
+        {
+            UTimeCounter ic("test_functional_init_01", CGRAPH_PRIMARY_THREAD_EMPTY_INTERVAL);
+            status += pipeline->init();
+        }
+
+        for (auto x = 0; x < runTimes; x++) {
+            UTimeCounter rc("test_functional_run_01", CGRAPH_PRIMARY_THREAD_EMPTY_INTERVAL);
+            status += pipeline->run();
+            if (rc.getSpan() >= CGRAPH_PRIMARY_THREAD_EMPTY_INTERVAL) {
+                std::cout << "  [timeout] test_functional_01 times = " << x << " span = " << rc.getSpan() << std::endl;
+                break;
+            }
+        }
+
+        {
+            UTimeCounter dc("test_functional_destroy_01", CGRAPH_PRIMARY_THREAD_EMPTY_INTERVAL);
+            status += pipeline->destroy();
+        }
     }
 
     if (status.isErr()) {
