@@ -31,7 +31,7 @@ public:
      */
     template<typename TTask, typename TMod>
     CVoid start(CMSec interval, const TTask& task, const TMod& modify) {
-        if (!is_stop_.exchange(false)) {
+        if (!is_stop_.exchange(false, std::memory_order_relaxed)) {
             return;    // 如果正在执行中，则无法继续执行
         }
 
@@ -43,10 +43,10 @@ public:
          * std::launch::deferred：延迟加载方式创建线程。调用async时不创建线程，直到调用了future的get或者wait时才创建线程。
          */
         future_ = std::async(std::launch::async, [this, task, modify]() {
-             while (!is_stop_) {
+             while (!is_stop_.load(std::memory_order_relaxed)) {
                  CGRAPH_UNIQUE_LOCK lk(mutex_);
                  auto result = cv_.wait_for(lk, std::chrono::milliseconds(left_interval_));
-                 if (std::cv_status::timeout == result && !is_stop_) {
+                 if (std::cv_status::timeout == result && !is_stop_.load(std::memory_order_relaxed)) {
                      CMSec start = CGRAPH_GET_CURRENT_MS();
                      task();
                      CMSec ms = modify();
@@ -75,7 +75,7 @@ public:
      * 关闭定时器
      */
     CVoid stop() {
-        if (is_stop_.exchange(true)) {
+        if (is_stop_.exchange(true, std::memory_order_relaxed)) {
             return;
         }
 

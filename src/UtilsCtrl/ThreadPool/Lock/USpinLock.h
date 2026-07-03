@@ -39,7 +39,7 @@ public:
      * @return
      */
     CBool tryLock() {
-        return !flag_.test_and_set();
+        return !flag_.test_and_set(std::memory_order_acquire);
     }
 
 private:

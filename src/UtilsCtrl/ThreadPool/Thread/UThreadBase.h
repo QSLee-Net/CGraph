@@ -24,7 +24,7 @@ protected:
     explicit UThreadBase() {
         done_ = true;
         is_init_ = false;
-        is_running_ = false;
+        is_running_.store(false, std::memory_order_relaxed);
         pool_task_queue_ = nullptr;
         pool_priority_task_queue_ = nullptr;
         config_ = nullptr;
@@ -113,7 +113,7 @@ protected:
             thread_.join();    // 等待线程结束
         }
         is_init_ = false;
-        is_running_ = false;
+        is_running_.store(false, std::memory_order_relaxed);
         total_task_num_ = 0;
     }
 
@@ -151,7 +151,7 @@ protected:
      */
     CVoid loopProcess() {
         CGRAPH_ASSERT_NOT_NULL_THROW_ERROR(config_)
-        is_running_ = true;
+        is_running_.store(true, std::memory_order_relaxed);
         if (config_->batch_task_enable_) {
             while (done_) {
                 processTasks();    // 批量任务获取执行接口

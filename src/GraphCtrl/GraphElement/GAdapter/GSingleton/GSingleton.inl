@@ -31,7 +31,7 @@ template <typename T>
 CStatus GSingleton<T>::init() {
     CGRAPH_FUNCTION_BEGIN
     /* 确保仅 GSingletonNode 类型内容，init一次 */
-    if (s_is_init_) {
+    if (s_is_init_.load(std::memory_order_acquire)) {
         CGRAPH_FUNCTION_END
     }
 
@@ -39,7 +39,7 @@ CStatus GSingleton<T>::init() {
     auto element = dynamic_cast<T *>(s_singleton_.get());
     status = element->init();
     if (status.isOK()) {
-        s_is_init_ = true;
+        s_is_init_.store(true, std::memory_order_release);
     }
 
     CGRAPH_FUNCTION_END
@@ -59,14 +59,14 @@ CStatus GSingleton<T>::run() {
 template <typename T>
 CStatus GSingleton<T>::destroy() {
     CGRAPH_FUNCTION_BEGIN
-    if (!s_is_init_) {
+    if (!s_is_init_.load(std::memory_order_acquire)) {
         CGRAPH_FUNCTION_END
     }
 
     auto element = dynamic_cast<T *>(s_singleton_.get());
     status = element->destroy();
     if (status.isOK()) {
-        s_is_init_ = false;
+        s_is_init_.store(false, std::memory_order_release);
     }
 
     CGRAPH_FUNCTION_END
