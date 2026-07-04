@@ -40,9 +40,9 @@ CStatus GSome::addElementEx(GElementPtr element) {
 CStatus GSome::run() {
     CGRAPH_FUNCTION_BEGIN
 
-    wait_num_ = getWaitNum();
-    CGRAPH_RETURN_ERROR_STATUS_BY_CONDITION(wait_num_ > children_.size(),
-        "num is bigger than elements size.");
+    threshold_ = getThreshold();
+    CGRAPH_RETURN_ERROR_STATUS_BY_CONDITION(threshold_ > children_.size(),
+        "threshold cannot bigger than elements size.");
     cur_status_.reset();
 
     /**
@@ -57,7 +57,7 @@ CStatus GSome::run() {
                 const auto& curStatus = element->fatProcessor(CFunctionType::RUN);
                 CGRAPH_UNIQUE_LOCK lock(lock_);
                 cur_status_ += curStatus;
-                if (--wait_num_ == 0 || cur_status_.isErr()) {
+                if (--threshold_ == 0 || cur_status_.isErr()) {
                     cv_.notify_one();
                 }
             }
@@ -67,7 +67,7 @@ CStatus GSome::run() {
     thread_pool_->wakeupAllThread();
     CGRAPH_UNIQUE_LOCK lock(lock_);
     cv_.wait(lock, [this] {
-        return wait_num_ == 0 || cur_status_.isErr();
+        return threshold_ == 0 || cur_status_.isErr();
     });
 
     for (auto* element : children_) {
@@ -108,7 +108,7 @@ CStatus GSome::checkSuitable() {
     status = GElement::checkSuitable();
     CGRAPH_FUNCTION_CHECK_STATUS
 
-    CGRAPH_RETURN_ERROR_STATUS_BY_CONDITION((CGRAPH_DEFAULT_LOOP_TIMES != loop_), "GSome cannot set loop > 1.")
+    CGRAPH_RETURN_ERROR_STATUS_BY_CONDITION(CGRAPH_DEFAULT_LOOP_TIMES != loop_, "GSome cannot set loop > 1.")
     CGRAPH_RETURN_ERROR_STATUS_BY_CONDITION(std::any_of(children_.begin(), children_.end(), [](GElementPtr ptr) {
         return !ptr->isAsync();
     }), "GSome contains async node only.")

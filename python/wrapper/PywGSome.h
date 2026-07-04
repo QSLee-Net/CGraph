@@ -21,15 +21,15 @@ public:
     }
     ~PywGSome() override = default;
 
-    CSize getWaitNum() override {
-        PYBIND11_OVERLOAD_PURE(CSize, PywGSome, getWaitNum);
+    CSize getThreshold() override {
+        PYBIND11_OVERLOAD_PURE(CSize, PywGSome, getThreshold);
     }
 };
 
 
 PYCGRAPH_DECLARE_GGROUP_INTERFACE_CLASS(PywGSome,
-    CSize getWaitNum() override {
-        PYBIND11_OVERLOAD_PURE(CSize, PywGSomeInterface, getWaitNum);
+    CSize getThreshold() override {
+        PYBIND11_OVERLOAD_PURE(CSize, PywGSomeInterface, getThreshold);
     });
 
 #endif //CGRAPH_PYWGSOME_H

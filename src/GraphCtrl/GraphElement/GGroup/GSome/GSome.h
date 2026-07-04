@@ -20,10 +20,10 @@ class GSome : public GGroup {
 protected:
     /**
      * 设定 wait_num 个数
-     * 当前 group 执行完成 wait_num 个后，就可以继续执行
+     * 当前 group 执行完成 threshold 个后，就可以继续执行
      * @return
      */
-    virtual CSize getWaitNum() = 0;
+    virtual CSize getThreshold() = 0;
 
 protected:
     explicit GSome();
@@ -41,7 +41,7 @@ protected:
     CStatus addElementEx(GElementPtr element) override;
 
 private:
-    CSize wait_num_ {0};                       // 还剩的触发结束的个数
+    CSize threshold_ {0};                      // 还剩的触发结束的个数
     CStatus cur_status_ ;                      // 记录异步时刻的当前状态信息
 
     std::mutex lock_;

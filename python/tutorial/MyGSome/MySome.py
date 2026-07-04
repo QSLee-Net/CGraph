@@ -9,5 +9,5 @@
 from pycgraph import GSome
 
 class MyGSome(GSome):
-    def getWaitNum(self):
+    def getThreshold(self):
         return 1

@@ -13,7 +13,7 @@
 
 class MySome : public CGraph::GSome {
 protected:
-    CSize getWaitNum() override {
+    CSize getThreshold() override {
         /**
          * 执行完 1个之后，当前的 GSome 就继续往后执行
          * 其余的 element，会在 pipeline 结束之前，执行完成。
