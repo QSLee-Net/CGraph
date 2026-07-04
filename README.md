@@ -424,6 +424,10 @@ if __name__ == '__main__':
 [2026.05.10 - v3.2.4 - Chunel]
 * 优化 `pycgraph` 功能
 
+[2026.07.04 - v3.2.5 - Chunel]
+* 优化调度性能
+* 优化 `pycgraph` 功能
+
 </details>
 
 ------------

@@ -34,8 +34,6 @@ protected:
 
     CVoid dump(std::ostream& oss) final;
 
-    CBool isHold() final;
-
     CStatus checkSuitable() final;
 
     CGRAPH_NO_ALLOWED_COPY(GSome)

@@ -37,7 +37,7 @@ CStatus GSome::addElementEx(GElementPtr element) {
 }
 
 
-CStatus GSome::run()  {
+CStatus GSome::run() {
     CGRAPH_FUNCTION_BEGIN
 
     wait_num_ = getWaitNum();
@@ -100,12 +100,6 @@ CVoid GSome::dump(std::ostream& oss) {
     for (const auto& element : run_before_) {
         dumpEdge(oss, this, element);
     }
-}
-
-
-CBool GSome::isHold() {
-    // 这里固定是不可以 hold的
-    return false;
 }
 
 

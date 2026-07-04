@@ -23,6 +23,7 @@
 #include "PywGStage.h"
 #include "PywGParallelMultiCondition.h"
 #include "PywGSerialMultiCondition.h"
+#include "PywGSome.h"
 #include "PywGMutable.h"
 #include "PywGPassedParam.h"
 #include "PywGPipelineDeleter.h"
