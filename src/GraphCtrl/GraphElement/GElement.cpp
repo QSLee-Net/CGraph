@@ -538,14 +538,14 @@ CStatus GElement::asyncRun() {
 
     async_result_ = thread_pool_->commit([this] {
         return run();
-    }, CGRAPH_POOL_TASK_STRATEGY);
+    }, CGRAPH_TRIGGER_ALL_THREAD_STRATEGY);
 
     const auto& futStatus = async_result_.wait_for(std::chrono::milliseconds(timeout_));
     if (std::future_status::ready == futStatus) {
         status = getAsyncResult();
     } else {
-        doAspect(internal::GAspectType::ENTER_TIMEOUT);
-        CGRAPH_RETURN_ERROR_STATUS_BY_CONDITION( GElementTimeoutStrategy::AS_ERROR == timeout_strategy_,    \
+        (void)doAspect(internal::GAspectType::ENTER_TIMEOUT);
+        CGRAPH_RETURN_ERROR_STATUS_BY_CONDITION(GElementTimeoutStrategy::AS_ERROR == timeout_strategy_,    \
         "[" + name_ + "] running time more than [" + std::to_string(timeout_) + "]ms")
         cur_state_.store(GElementState::TIMEOUT, std::memory_order_release);
     }

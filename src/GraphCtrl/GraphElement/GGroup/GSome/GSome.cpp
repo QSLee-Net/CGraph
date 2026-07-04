@@ -40,7 +40,7 @@ CStatus GSome::addElementEx(GElementPtr element) {
 CStatus GSome::run()  {
     CGRAPH_FUNCTION_BEGIN
 
-    wait_num_ = static_cast<CInt>(getWaitNum());
+    wait_num_ = getWaitNum();
     CGRAPH_RETURN_ERROR_STATUS_BY_CONDITION(wait_num_ > children_.size(),
         "num is bigger than elements size.");
     cur_status_.reset();
@@ -57,16 +57,17 @@ CStatus GSome::run()  {
                 const auto& curStatus = element->fatProcessor(CFunctionType::RUN);
                 CGRAPH_UNIQUE_LOCK lock(lock_);
                 cur_status_ += curStatus;
-                if (--wait_num_ <= 0 || cur_status_.isErr()) {
+                if (--wait_num_ == 0 || cur_status_.isErr()) {
                     cv_.notify_one();
                 }
             }
-        }, binding_index_);
+        });
     }
 
+    thread_pool_->wakeupAllThread();
     CGRAPH_UNIQUE_LOCK lock(lock_);
     cv_.wait(lock, [this] {
-        return wait_num_ <= 0 || cur_status_.isErr();
+        return wait_num_ == 0 || cur_status_.isErr();
     });
 
     for (auto* element : children_) {

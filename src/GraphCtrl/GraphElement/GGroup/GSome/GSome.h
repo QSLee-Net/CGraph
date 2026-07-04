@@ -43,7 +43,7 @@ protected:
     CStatus addElementEx(GElementPtr element) override;
 
 private:
-    CInt wait_num_ {0};                        // 还剩的触发结束的个数
+    CSize wait_num_ {0};                       // 还剩的触发结束的个数
     CStatus cur_status_ ;                      // 记录异步时刻的当前状态信息
 
     std::mutex lock_;
