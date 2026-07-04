@@ -11,6 +11,7 @@
 
 #include <vector>
 #include <memory>
+#include <utility>
 #include <type_traits>
 
 #include "../UThreadObject.h"
@@ -33,8 +34,9 @@ class UTask : public CStruct {
     };
 
 public:
-    template<typename F>
-    UTask(F&& func, const int priority = 0)
+    template<typename F,
+        typename std::enable_if<!std::is_same<typename std::decay<F>::type, UTask>::value, int>::type = 0>
+    explicit UTask(F&& func, const int priority = 0)
         : impl_(new TaskDerided<F>(std::forward<F>(func)))
         , priority_(priority) {}
 
@@ -48,6 +50,10 @@ public:
     UTask(UTask&& task) noexcept:
             impl_(std::move(task.impl_)),
             priority_(task.priority_) {}
+
+    UTask(UTask&& task, const int priority) noexcept:
+            impl_(std::move(task.impl_)),
+            priority_(priority) {}
 
     UTask &operator=(UTask&& task) noexcept {
         impl_ = std::move(task.impl_);

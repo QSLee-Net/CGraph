@@ -32,7 +32,7 @@ auto UThreadPool::commitWithTid(const FunctionType& func, CIndex tid, CBool enab
     std::packaged_task<ResultType()> task(std::move(func));
     std::future<ResultType> result(task.get_future());
 
-    execute(std::move(task), tid, enable, lockable);
+    executeWithTid(std::move(task), tid, enable, lockable);
     return result;
 }
 
@@ -49,7 +49,7 @@ auto UThreadPool::commitWithPriority(const FunctionType& func, int priority)
         createSecondaryThread(1);    // 如果没有开启辅助线程，则直接开启一个
     }
 
-    priority_task_queue_.push(std::move(task), priority);
+    priority_task_queue_.push(UTask(std::move(task)), priority);
     return result;
 }
 
@@ -59,14 +59,14 @@ CVoid UThreadPool::execute(FunctionType&& task, const CIndex index) {
     const CIndex realIndex = dispatch(index);
 
     if (likely(realIndex >= 0 && realIndex < config_.default_thread_size_)) {
-        primary_threads_[realIndex]->pushTask(std::forward<FunctionType>(task));
+        primary_threads_[realIndex]->pushTask(UTask(std::forward<FunctionType>(task)));
     } else if (CGRAPH_LONG_TIME_TASK_STRATEGY == realIndex) {
-        priority_task_queue_.push(std::forward<FunctionType>(task), CGRAPH_LONG_TIME_TASK_STRATEGY);
+        priority_task_queue_.push(UTask(std::forward<FunctionType>(task)), CGRAPH_LONG_TIME_TASK_STRATEGY);
     } else if (CGRAPH_TRIGGER_ALL_THREAD_STRATEGY == realIndex) {
-        task_queue_.push(std::forward<FunctionType>(task));
+        task_queue_.push(UTask(std::forward<FunctionType>(task)));
         (void)wakeupAllThread();
     } else {
-        task_queue_.push(std::forward<FunctionType>(task));
+        task_queue_.push(UTask(std::forward<FunctionType>(task)));
     }
 }
 
@@ -74,10 +74,10 @@ CVoid UThreadPool::execute(FunctionType&& task, const CIndex index) {
 template<typename FunctionType>
 CVoid UThreadPool::executeWithTid(FunctionType&& task, CIndex tid, CBool enable, CBool lockable) {
     if (likely(tid >= 0 && tid < config_.default_thread_size_)) {
-        primary_threads_[tid]->pushTask(std::forward<FunctionType>(task), enable, lockable);
+        primary_threads_[tid]->pushTask(UTask(std::forward<FunctionType>(task)), enable, lockable);
     } else {
         // 如果超出主线程的范围，则默认写入 pool 通用的任务队列中
-        task_queue_.push(std::forward<FunctionType>(task));
+        task_queue_.push(UTask(std::forward<FunctionType>(task)));
     }
 }
 
