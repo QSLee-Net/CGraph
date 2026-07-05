@@ -204,25 +204,20 @@ CVoid GDynamicEngine::afterElementRun(GElementPtr element) {
 
 
 CVoid GDynamicEngine::fatWait() {
-    const auto epoch = thread_pool_->getConfig().pipeline_wait_busy_epoch_;
-    for (CInt i = 0; i < epoch; i++) {
-        // 对于 pipeline 运行耗时很短的情况，在 进入 cv.wait() 之前，轮询等到一会
-        // 如果遇到 isErr() 的情况，还是走进入 mutex 的逻辑
-        if (finished_end_size_.load(std::memory_order_acquire) >= total_end_size_) {
-            return;
-        }
-        CGRAPH_YIELD();
+    if (!isFastFinished([this] {
+        // 如果快速结束了，则不进入 lock 中
+        return finished_end_size_.load(std::memory_order_relaxed) >= total_end_size_;
+    })) {
+        CGRAPH_UNIQUE_LOCK lock(locker_.mtx_);
+        locker_.cv_.wait(lock, [this] {
+            /**
+             * 遇到以下条件之一，结束执行：
+             * 1，执行结束
+             * 2，状态异常
+             */
+            return (finished_end_size_.load(std::memory_order_relaxed) >= total_end_size_) || cur_status_.isErr();
+        });
     }
-
-    CGRAPH_UNIQUE_LOCK lock(locker_.mtx_);
-    locker_.cv_.wait(lock, [this] {
-        /**
-         * 遇到以下条件之一，结束执行：
-         * 1，执行结束
-         * 2，状态异常
-         */
-        return (finished_end_size_.load(std::memory_order_acquire) >= total_end_size_) || cur_status_.isErr();
-    });
 }
 
 
@@ -250,18 +245,12 @@ CVoid GDynamicEngine::parallelRunAll() {
         (void)thread_pool_->wakeupAllThread();
     }
 
-    const auto epoch = thread_pool_->getConfig().pipeline_wait_busy_epoch_;
-    for (CInt i = 0; i < epoch; i++) {
-        if (parallel_run_num_ >= total_end_size_) {
-            return;
-        }
-        CGRAPH_YIELD();
-    }
-
-    {
+    if (!isFastFinished([this] {
+       return parallel_run_num_ >= total_end_size_;
+    })) {
         CGRAPH_UNIQUE_LOCK lock(locker_.mtx_);
         locker_.cv_.wait(lock, [this] {
-            return (parallel_run_num_ >= total_end_size_ || cur_status_.isErr());
+            return parallel_run_num_ >= total_end_size_ || cur_status_.isErr();
         });
     }
 }
@@ -312,6 +301,22 @@ CVoid GDynamicEngine::prepareRun() {
         }
         cur_status_.reset();
     }
+}
+
+
+template<typename Pred>
+CBool GDynamicEngine::isFastFinished(Pred&& check) {
+    CBool result = false;
+    const auto epoch = thread_pool_->getConfig().pipeline_wait_busy_epoch_;
+    for (auto i = 0; i < epoch; i++) {
+        if (check()) {
+            result = true;
+            break;
+        }
+        CGRAPH_YIELD();
+    }
+
+    return result;
 }
 
 CGRAPH_NAMESPACE_END

@@ -103,6 +103,14 @@ protected:
      */
     CVoid prepareRun();
 
+    /**
+     * 快速校验结束
+     * @return
+     * @notice 为了方式线程快速进入内核态，短时间在用户层停留，性能加速
+     */
+    template<typename Pred>
+    CBool isFastFinished(Pred&& check);
+
 private:
     GElementPtrArr total_element_arr_ {};                                                // pipeline中所有的元素信息集合
     GElementPtrArr front_element_arr_ {};                                                // 没有依赖的元素信息
