@@ -294,7 +294,7 @@ CStatus GPipeline::makeSerial() {
 
 
 GPipelineState GPipeline::getCurState() const {
-    return repository_.cur_state_;
+    return repository_.cur_state_.load(std::memory_order_acquire);
 }
 
 

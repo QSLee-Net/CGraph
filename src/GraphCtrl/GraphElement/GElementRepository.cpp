@@ -7,7 +7,6 @@
 ***************************/
 
 #include "GElementRepository.h"
-#include "GNode/GNodeInclude.h"
 #include "GGroup/GGroupInclude.h"
 
 CGRAPH_NAMESPACE_BEGIN
@@ -61,7 +60,7 @@ CStatus GElementRepository::reset() {
 
 CStatus GElementRepository::pushAllState(const GElementState& state) {
     CGRAPH_FUNCTION_BEGIN
-    if (cur_state_ == state) {
+    if (cur_state_.load(std::memory_order_acquire) == state) {
         return status;    // 避免重复赋值
     }
 
@@ -72,7 +71,7 @@ CStatus GElementRepository::pushAllState(const GElementState& state) {
             cur->suspend_locker_.cv_.notify_one();
         }
     }
-    cur_state_ = state;    // 记录当前的状态信息
+    cur_state_.store(state, std::memory_order_release);    // 记录当前的状态信息
     CGRAPH_FUNCTION_END
 }
 
@@ -93,7 +92,7 @@ CVoid GElementRepository::fetchAll(GElementManagerCPtr em) {
 CVoid GElementRepository::fetch(GElementPtr element) {
     elements_.insert(element);
     if (element->isGGroup()) {
-        auto group = dynamic_cast<GGroupPtr>(element);
+        const auto* group = dynamic_cast<GGroupPtr>(element);
         CGRAPH_ASSERT_NOT_NULL_THROW_ERROR(group)
         for (auto* cur : group->children_) {
             fetch(cur);
@@ -105,10 +104,9 @@ CVoid GElementRepository::fetch(GElementPtr element) {
 CBool GElementRepository::isCancelState() const {
     /**
      * 因为每次执行的时候，都需要判断一下这个状态是否为 cancel
-     * 且理论上不会出现多线程问题
-     * 故这一层的 cur_state_ 就不设置为atomic类型的了
+     * 外部线程可能通过 pipeline->cancel() 修改状态，故这里通过 atomic 读取
      */
-    return GElementState::CANCEL == cur_state_;
+    return GElementState::CANCEL == cur_state_.load(std::memory_order_acquire);
 }
 
 
