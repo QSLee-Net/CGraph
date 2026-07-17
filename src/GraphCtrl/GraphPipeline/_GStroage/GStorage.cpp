@@ -85,7 +85,9 @@ UREFL_CREATE_STRUCT_TRAIT_INFO(UThreadPoolConfig,
     UREFL_DECLARE_FIELD(UThreadPoolConfig, secondary_thread_priority_, 16),
     UREFL_DECLARE_FIELD(UThreadPoolConfig, bind_cpu_enable_, 17),
     UREFL_DECLARE_FIELD(UThreadPoolConfig, batch_task_enable_, 18),
-    UREFL_DECLARE_FIELD(UThreadPoolConfig, monitor_enable_, 19)
+    UREFL_DECLARE_FIELD(UThreadPoolConfig, monitor_enable_, 19),
+    UREFL_DECLARE_FIELD(UThreadPoolConfig, pipeline_wait_busy_epoch_, 20),
+    UREFL_DECLARE_FIELD(UThreadPoolConfig, deliver_running_primary_thread_enable_, 21)
 )
 
 UREFL_CREATE_STRUCT_TRAIT_INFO(_GPipelineStorage,
