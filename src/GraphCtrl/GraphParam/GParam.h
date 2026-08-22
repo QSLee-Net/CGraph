@@ -9,8 +9,8 @@
 #ifndef CGRAPH_GPARAM_H
 #define CGRAPH_GPARAM_H
 
-#include <set>
 #include <mutex>
+#include <vector>
 
 #include "GParamObject.h"
 
@@ -23,25 +23,6 @@ public:
 #else
     std::recursive_mutex _param_shared_lock_;
 #endif
-
-    /**
-     * 获取参数的调用栈信息
-     * @return
-     */
-    std::vector<std::string> getBacktrace();
-
-    /**
-     * 添加trace信息
-     * @param trace
-     * @return
-     */
-    CStatus addBacktrace(const std::string& trace);
-
-    /**
-     * 清空trace信息
-     * @return
-     */
-    CVoid cleanBacktrace();
 
     /**
      * 获取key信息
@@ -68,6 +49,32 @@ public:
      */
     CBool tryLock();
 
+    /**
+     * 添加一条trace信息
+     * @param trace trace信息
+     * @param repeatable 是否允许重复写入相同的trace信息
+     */
+    CVoid addTrace(const std::string &trace, CBool repeatable = true);
+
+    /**
+     * 删除所有匹配的trace信息
+     * @param trace trace信息
+     * @return 删除的trace数量
+     */
+    CSize removeTrace(const std::string &trace);
+
+    /**
+     * 清空所有trace信息
+     */
+    CVoid clearTrace();
+
+    /**
+     * 获取当前所有trace信息的有序快照
+     * @return 独立的trace数组，保留添加顺序和重复内容
+     * @notice 本接口线程安全，返回结果不受后续增删操作影响
+     */
+    std::vector<std::string> getTraces();
+
 protected:
     /**
      * 每次pipeline执行前，会调用一次setup，可以不实现
@@ -85,17 +92,15 @@ protected:
 
 
 private:
-    CBool backtrace_enable_ = false;                             // 是否使能backtrace功能
-    std::string key_;                                            // 名称信息
-    USerialUniqueArray<std::string> backtrace_;                  // 记录参数的调用栈信息，仅记录get 此参数的地方。不包括 create和remove的地方。
-    USpinLock backtrace_lock_;                                   // 针对backtrace的自旋锁
+    std::string key_;                                 // 名称信息
+    std::vector<std::string> traces_ {};              // 记录 trace 信息
+    std::mutex trace_mtx_ {};
 
     friend class GParamManager;
     friend class GStorage;
 };
 
 using GParamPtr = GParam *;
-using GParamPtrSet = std::set<GParamPtr>;
 
 CGRAPH_NAMESPACE_END
 

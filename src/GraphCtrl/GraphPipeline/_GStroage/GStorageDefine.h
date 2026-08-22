@@ -64,13 +64,12 @@ struct _GStageStorage : public _GStorageBasic {
 
 struct _GParamStorage : public _GStorageBasic {
     explicit _GParamStorage() = default;
-    explicit _GParamStorage(const std::string& key, CBool backtrace, const std::string& clz) {
+    explicit _GParamStorage(const std::string& key, const std::string& clz) {
         key_ = key;
-        backtrace_ = backtrace;
+        clz_name_ = clz;
     }
 
     std::string key_ {};
-    CBool backtrace_ { false };
 };
 
 struct _GPassedParamStorage : public _GStorageBasic {

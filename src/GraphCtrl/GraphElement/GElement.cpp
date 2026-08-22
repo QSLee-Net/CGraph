@@ -230,7 +230,6 @@ CStatus GElement::fatProcessor(const CFunctionType& type) {
                 break;
             }
             case CFunctionType::INIT: {
-                concerned_params_.clear();    // 仅需要记录这一轮使用到的 GParam 信息
                 status = init();
                 CGRAPH_FUNCTION_CHECK_STATUS
                 break;
@@ -291,7 +290,6 @@ CStatus GElement::fatProcessor(const CFunctionType& type) {
                 break;
             }
             case CFunctionType::INIT: {
-                concerned_params_.clear();    // 仅需要记录这一轮使用到的 GParam 信息
                 is_prepared_ = false;
                 status = doAspect(internal::GAspectType::BEGIN_INIT);
                 CGRAPH_FUNCTION_CHECK_STATUS

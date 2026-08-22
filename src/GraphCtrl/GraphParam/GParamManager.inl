@@ -17,10 +17,10 @@ CGRAPH_NAMESPACE_BEGIN
 
 template<typename T,
         c_enable_if_t<std::is_base_of<GParam, T>::value, int>>
-CStatus GParamManager::create(const std::string& key, CBool backtrace) {
+CStatus GParamManager::create(const std::string& key) {
     CGRAPH_FUNCTION_BEGIN
     CGRAPH_LOCK_GUARD lock(this->mutex_);
-    auto iter = params_map_.find(key);
+    const auto iter = params_map_.find(key);
     if (iter != params_map_.end()) {
         /* 如果是重复创建，则返回ok；非重复创建（类型不同）则返回err */
         auto param = iter->second;
@@ -28,10 +28,9 @@ CStatus GParamManager::create(const std::string& key, CBool backtrace) {
                CStatus() : CStatus("create [" + key + "] param duplicate");
     }
 
-    T* ptr = CGRAPH_SAFE_MALLOC_COBJECT(T)
-    ((GParamPtr)ptr)->key_ = key;
-    ((GParamPtr)ptr)->backtrace_enable_ = backtrace;
-    params_map_.insert(std::pair<std::string, T*>(key, ptr));
+    GParamPtr ptr = CGRAPH_SAFE_MALLOC_COBJECT(T)
+    ptr->key_ = key;
+    params_map_.insert(std::pair<std::string, GParamPtr>(key, ptr));
     CGRAPH_FUNCTION_END
 }
 

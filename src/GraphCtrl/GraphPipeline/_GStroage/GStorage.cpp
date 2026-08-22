@@ -172,8 +172,7 @@ CStatus GStorage::buildPipelineStorage(GPipeline* pipeline, _GPipelineStorage& s
     for (const auto& param : pipeline->param_manager_->params_map_) {
         const std::string& key = param.first;
         const std::string& clz = typeid(*param.second).name();
-        bool backtrace = (*param.second).backtrace_enable_;
-        storage.param_storages_.emplace_back(key, backtrace, clz);
+        storage.param_storages_.emplace_back(key, clz);
     }
     for (const auto& daemon : pipeline->daemon_manager_->daemons_) {
         CMSec msec = daemon->getInterval();
@@ -329,7 +328,6 @@ CStatus GStorage::loadParam(GPipelinePtr pipeline, const _GPipelineStorage& stor
         CGRAPH_RETURN_ERROR_STATUS_BY_CONDITION(!param,
                                                 gps.key_ + " param type do not register, please check");
         param->key_ = gps.key_;
-        param->backtrace_enable_ = gps.backtrace_;
         pipeline->param_manager_->params_map_[gps.key_] = param;
     }
 

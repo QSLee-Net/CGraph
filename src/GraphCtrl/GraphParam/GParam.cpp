@@ -8,45 +8,9 @@
 
 #include "GParam.h"
 
+#include <algorithm>
+
 CGRAPH_NAMESPACE_BEGIN
-
-std::vector<std::string> GParam::getBacktrace() {
-    CGRAPH_THROW_EXCEPTION_BY_CONDITION(!backtrace_enable_,    \
-                                        "no enable backtrace for [" + key_ + "] param")
-
-    std::vector<std::string> traces;
-    backtrace_lock_.lock();
-    backtrace_.getUniqueArray(traces);
-    backtrace_lock_.unlock();
-
-    return traces;
-}
-
-
-CStatus GParam::addBacktrace(const std::string& trace) {
-    CGRAPH_FUNCTION_BEGIN
-    CGRAPH_RETURN_ERROR_STATUS_BY_CONDITION(!backtrace_enable_,    \
-                                            "no enable backtrace for [" + key_ + "] param")
-
-    // 如果name不为空，则添加name信息。如果name为空，则添加session信息
-    backtrace_lock_.lock();
-    backtrace_.uniqueAdd(trace);
-    backtrace_lock_.unlock();
-
-    CGRAPH_FUNCTION_END
-}
-
-
-CVoid GParam::cleanBacktrace() {
-    if (!backtrace_enable_) {
-        return;
-    }
-
-    backtrace_lock_.lock();
-    backtrace_.clear();
-    backtrace_lock_.unlock();
-}
-
 
 std::string GParam::getKey() const {
     return key_;
@@ -59,6 +23,7 @@ CStatus GParam::setup() {
 
 
 CVoid GParam::reset(const CStatus& curStatus) {
+    (CVoid)curStatus;
 }
 
 
@@ -74,6 +39,35 @@ CVoid GParam::unlock() {
 
 CBool GParam::tryLock() {
     return _param_shared_lock_.try_lock();
+}
+
+
+CVoid GParam::addTrace(const std::string &trace, const CBool repeatable) {
+    CGRAPH_LOCK_GUARD lk(trace_mtx_);
+    if (repeatable || traces_.end() == std::find(traces_.begin(), traces_.end(), trace)) {
+        traces_.emplace_back(trace);
+    }
+}
+
+
+CSize GParam::removeTrace(const std::string &trace) {
+    CGRAPH_LOCK_GUARD lk(trace_mtx_);
+    const auto curSize = traces_.size();
+    traces_.erase(std::remove(traces_.begin(), traces_.end(), trace), traces_.end());
+    return curSize - traces_.size();
+}
+
+
+CVoid GParam::clearTrace() {
+    std::vector<std::string> traces {};
+    CGRAPH_LOCK_GUARD lk(trace_mtx_);
+    traces.swap(traces_);
+}
+
+
+std::vector<std::string> GParam::getTraces() {
+    CGRAPH_LOCK_GUARD lk(trace_mtx_);
+    return traces_;
 }
 
 CGRAPH_NAMESPACE_END

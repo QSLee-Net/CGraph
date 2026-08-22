@@ -167,6 +167,17 @@ PYBIND11_MODULE(pycgraph, cg) {
              py::call_guard<py::gil_scoped_release>())
         .def("tryLock", &GParam::tryLock,
              py::call_guard<py::gil_scoped_release>())
+        .def("addTrace", &GParam::addTrace,
+             py::arg("trace"),
+             py::arg("repeatable") = true,
+             py::call_guard<py::gil_scoped_release>())
+        .def("removeTrace", &GParam::removeTrace,
+             py::arg("trace"),
+             py::call_guard<py::gil_scoped_release>())
+        .def("clearTrace", &GParam::clearTrace,
+             py::call_guard<py::gil_scoped_release>())
+        .def("getTraces", &GParam::getTraces,
+             py::call_guard<py::gil_scoped_release>())
         .def("__enter__", [](GParam& self) -> GParam& {
                 self.lock();
                 return self;

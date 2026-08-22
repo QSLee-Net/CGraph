@@ -51,7 +51,7 @@ private:
      * @return
      * @notice 主要针对异步流程
      */
-    CStatus reset();
+    CStatus reset() const;
 
     /**
      * 设置所有内部的element状态

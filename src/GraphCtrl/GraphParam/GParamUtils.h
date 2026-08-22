@@ -17,9 +17,6 @@ CGRAPH_NAMESPACE_BEGIN
 #define CGRAPH_CREATE_GPARAM(Type, key)                                       \
     this->template createGParam<Type>(key);                                   \
 
-#define CGRAPH_CREATE_GPARAM_WITH_BACKTRACE(Type, key)                        \
-    this->template createGParam<Type>(key, true);                             \
-
 /** 获取参数信息 */
 #define CGRAPH_GET_GPARAM(Type, key)                                          \
     this->template getGParam<Type>(key);                                      \

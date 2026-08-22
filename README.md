@@ -432,6 +432,9 @@ if __name__ == '__main__':
 * 提供 lite 运行模式
 * 修改 `GSome` 使用方式
 
+[2026.08.22 - v3.3.0 - Chunel]
+* 优化 `GParam` 的 trace 功能
+
 </details>
 
 ------------

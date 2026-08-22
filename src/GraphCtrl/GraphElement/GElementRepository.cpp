@@ -25,7 +25,7 @@ CBool GElementRepository::find(GElementPtr ptr) const {
 
 GElementRepositoryPtr GElementRepository::setThreadPool(UThreadPoolPtr ptr) {
     CGRAPH_ASSERT_NOT_NULL_THROW_ERROR(ptr)
-    for (auto& cur : this->elements_) {
+    for (auto* cur : this->elements_) {
         cur->setThreadPool(ptr);
     }
     return this;
@@ -40,9 +40,9 @@ CStatus GElementRepository::setup() {
 }
 
 
-CStatus GElementRepository::reset() {
+CStatus GElementRepository::reset() const {
     CGRAPH_FUNCTION_BEGIN
-    for (auto& cur : async_elements_) {
+    for (auto* cur : async_elements_) {
         if (GElementTimeoutStrategy::HOLD_BY_PIPELINE == cur->timeout_strategy_) {
             // 强烈建议，在这里等待执行完成
             status += cur->getAsyncResult();
@@ -78,7 +78,7 @@ CStatus GElementRepository::pushAllState(const GElementState& state) {
 
 CVoid GElementRepository::fetchAll(GElementManagerCPtr em) {
     CGRAPH_ASSERT_NOT_NULL_THROW_ERROR(em)
-    for (GElementPtr cur : em->manager_elements_) {
+    for (auto* cur : em->manager_elements_) {
         /**
          * 从 pipeline 的 element manager 中，逐层添加查询
          * 查询到如果pipeline中，存在没有注册到 repo 中element，则写入 repo中
@@ -113,7 +113,7 @@ CBool GElementRepository::isCancelState() const {
 CStatus GElementRepository::init() {
     CGRAPH_FUNCTION_BEGIN
     async_elements_.clear();    // 每次记得清空这里。因为每次init之后，都可能不一样
-    for (auto& element : elements_) {
+    for (auto* element : elements_) {
         /**
          * 1. 查验element是否为空
          * 2. 查验配置信息是否正确
@@ -155,7 +155,7 @@ CStatus GElementRepository::run() {
 
 GElementRepository::~GElementRepository() {
     // 删除所有内部的element信息
-    for (GElementPtr element : elements_) {
+    for (const auto* element : elements_) {
         CGRAPH_DELETE_PTR(element)
     }
 }
